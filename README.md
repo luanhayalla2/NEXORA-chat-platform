@@ -7,13 +7,6 @@
   Construído com React, TypeScript e Supabase.
 </p>
 
----
-
-## 📱 Telas do App
-
-(Espaço para capturas de tela da aplicação)
-
----
 
 ## 📋 Índice
 
@@ -302,22 +295,6 @@ O NEXORA utiliza **Supabase** como backend com as seguintes tabelas:
 - Todos os perfis são visíveis para leitura (para exibir nomes e avatares)
 - Criação automática de perfil via trigger `handle_new_user`
 
----
-
-## 📸 Telas do App
-
-<p align="center">
-  <img src="public/screenshots/welcome.png" alt="Tela de Boas-vindas" width="200" />
-  <img src="public/screenshots/login.png" alt="Tela de Login" width="200" />
-  <img src="public/screenshots/chat.png" alt="Tela de Chat" width="200" />
-  <img src="public/screenshots/status.png" alt="Tela de Status" width="200" />
-</p>
-<p align="center">
-  <img src="public/screenshots/communities.png" alt="Tela de Comunidades" width="200" />
-  <img src="public/screenshots/calls.png" alt="Tela de Ligações" width="200" />
-  <img src="public/screenshots/profile.png" alt="Tela de Perfil" width="200" />
-  <img src="public/screenshots/settings.png" alt="Tela de Configurações" width="200" />
-</p>
 
 ---
 
