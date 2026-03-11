@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="public/nexora-logo.png" alt="NEXORA Logo" width="100" />
-</p>
+
 
 <h1 align="center">NEXORA</h1>
 <p align="center"><strong>Bem-vindo ao futuro do chat</strong></p>
@@ -191,7 +189,7 @@
 
 ### ⚙️ Configurações do App
 
-Painel completo acessível pelo ícone ⚙️ ao lado do logo NEXORA:
+Painel completo acessível pelo ícone ⚙️:
 
 - **Conta**: edição de nome, bio e telefone com salvamento no backend
 - **Aparência**: toggle de tema (claro/escuro)
@@ -220,7 +218,7 @@ Painel completo acessível pelo ícone ⚙️ ao lado do logo NEXORA:
 
 ```
 src/
-├── assets/              # Imagens e assets (logo)
+├── assets/              # Imagens e assets
 ├── components/
 │   ├── chat/
 │   │   ├── ChatView.tsx         # Tela de conversa principal
