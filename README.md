@@ -9,6 +9,12 @@
 
 ---
 
+## 📱 Telas do App
+
+(Espaço para capturas de tela da aplicação)
+
+---
+
 ## 📋 Índice
 
 - [Visão Geral](#-visão-geral)
