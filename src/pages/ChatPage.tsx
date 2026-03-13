@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Settings, MessageCircle, CircleDot, Users, Phone } from 'lucide-react';
+import { NewConversationDialog } from '@/components/chat/NewConversationDialog';
 import { AnimatePresence, motion } from 'framer-motion';
 
 type SidebarTab = 'chats' | 'status' | 'community' | 'calls';
