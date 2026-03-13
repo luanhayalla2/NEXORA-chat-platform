@@ -326,7 +326,7 @@ export function ChatView() {
           <input
             ref={inputRef}
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => { setInput(e.target.value); broadcastTyping(); }}
             onKeyDown={handleKeyDown}
             placeholder="Mensagem..."
             className="flex-1 h-10 px-4 bg-secondary/50 rounded-full text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
