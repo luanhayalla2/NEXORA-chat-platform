@@ -62,9 +62,12 @@ function ChatLayout() {
             </button>
             <span className="font-semibold text-sm text-foreground">NEXORA</span>
           </div>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowSettings(true)}>
-            <Settings className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <NewConversationDialog />
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowSettings(true)}>
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
