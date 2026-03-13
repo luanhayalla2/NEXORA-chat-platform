@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useChat } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -8,7 +8,9 @@ import { ArrowLeft, Phone, Send, Paperclip, Check, CheckCheck, Mic, Camera, File
 import { motion, AnimatePresence } from 'framer-motion';
 import { EmojiPicker } from './EmojiPicker';
 import { ChatHeaderMenu } from './ChatHeaderMenu';
+import { TypingIndicator } from './TypingIndicator';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
