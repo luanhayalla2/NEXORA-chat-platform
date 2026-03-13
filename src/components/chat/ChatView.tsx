@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useChat } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -8,9 +8,7 @@ import { ArrowLeft, Phone, Send, Paperclip, Check, CheckCheck, Mic, Camera, File
 import { motion, AnimatePresence } from 'framer-motion';
 import { EmojiPicker } from './EmojiPicker';
 import { ChatHeaderMenu } from './ChatHeaderMenu';
-import { TypingIndicator } from './TypingIndicator';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,50 +16,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Message } from '@/types';
-import { useAuth } from '@/contexts/AuthContext';
 
 export function ChatView() {
   const { activeConversation, messages, sendMessage, setActiveConversation } = useChat();
-  const { user } = useAuth();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [isOtherTyping, setIsOtherTyping] = useState(false);
-  const [otherTypingName, setOtherTypingName] = useState('');
-  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  // Typing indicator via Supabase broadcast
-  useEffect(() => {
-    if (!activeConversation?.id || !user?.id) return;
-
-    const channel = supabase.channel(`typing:${activeConversation.id}`);
-
-    channel.on('broadcast', { event: 'typing' }, (payload) => {
-      if (payload.payload?.userId !== user.id) {
-        setIsOtherTyping(true);
-        setOtherTypingName(payload.payload?.name || '');
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
-      }
-    }).subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    };
-  }, [activeConversation?.id, user?.id]);
-
-  const broadcastTyping = useCallback(() => {
-    if (!activeConversation?.id || !user) return;
-    supabase.channel(`typing:${activeConversation.id}`).send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { userId: user.id, name: user.displayName },
-    });
-  }, [activeConversation?.id, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -212,7 +175,7 @@ export function ChatView() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
-            const isOwn = msg.senderId === user?.id;
+            const isOwn = msg.senderId === '1';
             const showTime = i === 0 || 
               (messages[i - 1].createdAt.getTime() - msg.createdAt.getTime() > 300000);
             
@@ -250,7 +213,6 @@ export function ChatView() {
             );
           })}
         </AnimatePresence>
-        {isOtherTyping && <TypingIndicator name={otherTypingName} />}
         <div ref={messagesEndRef} />
       </div>
 
@@ -327,7 +289,7 @@ export function ChatView() {
           <input
             ref={inputRef}
             value={input}
-            onChange={e => { setInput(e.target.value); broadcastTyping(); }}
+            onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Mensagem..."
             className="flex-1 h-10 px-4 bg-secondary/50 rounded-full text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
