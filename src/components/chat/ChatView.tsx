@@ -16,9 +16,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Message } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function ChatView() {
   const { activeConversation, messages, sendMessage, setActiveConversation } = useChat();
+  const { user } = useAuth();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -175,7 +177,7 @@ export function ChatView() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
-            const isOwn = msg.senderId === '1';
+            const isOwn = msg.senderId === user?.id;
             const showTime = i === 0 || 
               (messages[i - 1].createdAt.getTime() - msg.createdAt.getTime() > 300000);
             

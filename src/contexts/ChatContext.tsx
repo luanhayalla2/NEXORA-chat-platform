@@ -1,68 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './AuthContext';
 import type { Conversation, Message, ConversationWithUser, User } from '@/types';
-
-// Mock data
-const MOCK_USERS: User[] = [
-  { id: '2', username: 'maria_ui', displayName: 'Maria Santos', email: 'maria@email.com', lastSeen: new Date(), isOnline: true, createdAt: new Date(), bio: 'UI/UX Designer' },
-  { id: '3', username: 'carlos_pm', displayName: 'Carlos Oliveira', email: 'carlos@email.com', lastSeen: new Date(Date.now() - 300000), isOnline: false, createdAt: new Date(), bio: 'Product Manager' },
-  { id: '4', username: 'ana_dev', displayName: 'Ana Costa', email: 'ana@email.com', lastSeen: new Date(Date.now() - 3600000), isOnline: false, createdAt: new Date(), bio: 'Backend Developer' },
-  { id: '5', username: 'pedro_ops', displayName: 'Pedro Lima', email: 'pedro@email.com', lastSeen: new Date(), isOnline: true, createdAt: new Date(), bio: 'DevOps Engineer' },
-  { id: '6', username: 'julia_design', displayName: 'Julia Ferreira', email: 'julia@email.com', lastSeen: new Date(Date.now() - 7200000), isOnline: false, createdAt: new Date(), bio: 'Graphic Designer' },
-];
-
-const MOCK_CONVERSATIONS: ConversationWithUser[] = [
-  {
-    id: 'c1', type: 'private', participants: ['1', '2'], unreadCount: 3, isPinned: true, isMuted: false,
-    createdAt: new Date(), updatedAt: new Date(),
-    otherUser: MOCK_USERS[0],
-    lastMessage: { id: 'm1', conversationId: 'c1', senderId: '2', content: 'O design ficou incrível! Vou te enviar os assets agora 🎨', type: 'text', status: 'delivered', createdAt: new Date(Date.now() - 60000) },
-  },
-  {
-    id: 'c2', type: 'group', name: 'Equipe Produto', participants: ['1', '2', '3', '4'], unreadCount: 12, isPinned: true, isMuted: false,
-    createdAt: new Date(), updatedAt: new Date(),
-    lastMessage: { id: 'm2', conversationId: 'c2', senderId: '3', content: 'Sprint review amanhã às 10h. Todos confirmados?', type: 'text', status: 'read', createdAt: new Date(Date.now() - 180000) },
-  },
-  {
-    id: 'c3', type: 'private', participants: ['1', '3'], unreadCount: 0, isPinned: false, isMuted: false,
-    createdAt: new Date(), updatedAt: new Date(),
-    otherUser: MOCK_USERS[1],
-    lastMessage: { id: 'm3', conversationId: 'c3', senderId: '1', content: 'Vamos alinhar o roadmap na segunda', type: 'text', status: 'read', createdAt: new Date(Date.now() - 3600000) },
-  },
-  {
-    id: 'c4', type: 'private', participants: ['1', '4'], unreadCount: 1, isPinned: false, isMuted: false,
-    createdAt: new Date(), updatedAt: new Date(),
-    otherUser: MOCK_USERS[2],
-    lastMessage: { id: 'm4', conversationId: 'c4', senderId: '4', content: 'PR aprovado! Pode fazer merge ✅', type: 'text', status: 'delivered', createdAt: new Date(Date.now() - 7200000) },
-  },
-  {
-    id: 'c5', type: 'channel', name: 'Anúncios Tech', participants: ['1', '2', '3', '4', '5'], unreadCount: 0, isPinned: false, isMuted: true,
-    createdAt: new Date(), updatedAt: new Date(),
-    lastMessage: { id: 'm5', conversationId: 'c5', senderId: '5', content: 'Deploy v2.3.1 concluído com sucesso 🚀', type: 'text', status: 'read', createdAt: new Date(Date.now() - 86400000) },
-  },
-  {
-    id: 'c6', type: 'private', participants: ['1', '6'], unreadCount: 0, isPinned: false, isMuted: false,
-    createdAt: new Date(), updatedAt: new Date(),
-    otherUser: MOCK_USERS[4],
-    lastMessage: { id: 'm6', conversationId: 'c6', senderId: '6', content: 'Enviei as ilustrações por email', type: 'text', status: 'read', createdAt: new Date(Date.now() - 172800000) },
-  },
-];
-
-const MOCK_MESSAGES: Record<string, Message[]> = {
-  c1: [
-    { id: 'm1-1', conversationId: 'c1', senderId: '1', content: 'E aí Maria, como ficou o redesign?', type: 'text', status: 'read', createdAt: new Date(Date.now() - 300000) },
-    { id: 'm1-2', conversationId: 'c1', senderId: '2', content: 'Ficou demais! Refiz toda a paleta de cores', type: 'text', status: 'read', createdAt: new Date(Date.now() - 240000) },
-    { id: 'm1-3', conversationId: 'c1', senderId: '2', content: 'Usei aquela referência que você mandou do Dribbble', type: 'text', status: 'read', createdAt: new Date(Date.now() - 200000) },
-    { id: 'm1-4', conversationId: 'c1', senderId: '1', content: 'Ótimo! Manda o link do Figma pra eu dar uma olhada', type: 'text', status: 'read', createdAt: new Date(Date.now() - 150000) },
-    { id: 'm1-5', conversationId: 'c1', senderId: '2', content: 'O design ficou incrível! Vou te enviar os assets agora 🎨', type: 'text', status: 'delivered', createdAt: new Date(Date.now() - 60000) },
-  ],
-  c2: [
-    { id: 'm2-1', conversationId: 'c2', senderId: '3', content: 'Pessoal, precisamos alinhar as prioridades do Q2', type: 'text', status: 'read', createdAt: new Date(Date.now() - 600000) },
-    { id: 'm2-2', conversationId: 'c2', senderId: '1', content: 'Concordo. A feature de mensagens em grupo é prioridade', type: 'text', status: 'read', createdAt: new Date(Date.now() - 500000) },
-    { id: 'm2-3', conversationId: 'c2', senderId: '2', content: 'Já estou trabalhando no design system atualizado', type: 'text', status: 'read', createdAt: new Date(Date.now() - 400000) },
-    { id: 'm2-4', conversationId: 'c2', senderId: '4', content: 'A API de real-time está pronta para testes', type: 'text', status: 'read', createdAt: new Date(Date.now() - 300000) },
-    { id: 'm2-5', conversationId: 'c2', senderId: '3', content: 'Sprint review amanhã às 10h. Todos confirmados?', type: 'text', status: 'read', createdAt: new Date(Date.now() - 180000) },
-  ],
-};
 
 interface ChatContextType {
   conversations: ConversationWithUser[];
@@ -72,42 +11,278 @@ interface ChatContextType {
   sendMessage: (content: string) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+  isLoading: boolean;
+  createConversation: (otherUserId: string) => Promise<string | null>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
+function mapProfile(p: any): User {
+  return {
+    id: p.id,
+    username: p.username,
+    displayName: p.display_name,
+    email: '',
+    avatarUrl: p.avatar_url || '',
+    bio: p.bio || '',
+    phone: p.phone || '',
+    lastSeen: new Date(p.last_seen || Date.now()),
+    isOnline: p.is_online || false,
+    createdAt: new Date(p.created_at || Date.now()),
+  };
+}
+
+function mapMessage(m: any): Message {
+  return {
+    id: m.id,
+    conversationId: m.conversation_id,
+    senderId: m.sender_id,
+    content: m.content,
+    type: m.type as Message['type'],
+    status: m.status as Message['status'],
+    replyToId: m.reply_to_id || undefined,
+    createdAt: new Date(m.created_at),
+    editedAt: m.edited_at ? new Date(m.edited_at) : undefined,
+  };
+}
+
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [conversations] = useState<ConversationWithUser[]>(MOCK_CONVERSATIONS);
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<ConversationWithUser[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [allMessages, setAllMessages] = useState<Record<string, Message[]>>(MOCK_MESSAGES);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const currentUserId = user?.id;
+
+  // Load conversations
+  useEffect(() => {
+    if (!currentUserId) {
+      setConversations([]);
+      setIsLoading(false);
+      return;
+    }
+
+    const loadConversations = async () => {
+      setIsLoading(true);
+
+      // Get user's conversation participations
+      const { data: participations, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id, is_muted, is_pinned, unread_count')
+        .eq('user_id', currentUserId);
+
+      if (partError || !participations?.length) {
+        setConversations([]);
+        setIsLoading(false);
+        return;
+      }
+
+      const convIds = participations.map(p => p.conversation_id);
+
+      // Get conversations
+      const { data: convs } = await supabase
+        .from('conversations')
+        .select('*')
+        .in('id', convIds)
+        .order('updated_at', { ascending: false });
+
+      if (!convs?.length) {
+        setConversations([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Get all participants for these conversations to find other users
+      const { data: allParts } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id, user_id')
+        .in('conversation_id', convIds);
+
+      // Get unique other user IDs
+      const otherUserIds = [...new Set(
+        (allParts || [])
+          .filter(p => p.user_id !== currentUserId)
+          .map(p => p.user_id)
+      )];
+
+      // Get profiles
+      let profilesMap: Record<string, User> = {};
+      if (otherUserIds.length) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', otherUserIds);
+        (profiles || []).forEach(p => {
+          profilesMap[p.id] = mapProfile(p);
+        });
+      }
+
+      // Get last message for each conversation
+      const lastMessagesMap: Record<string, Message> = {};
+      for (const convId of convIds) {
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', convId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (msgs?.length) {
+          lastMessagesMap[convId] = mapMessage(msgs[0]);
+        }
+      }
+
+      const partMap = Object.fromEntries(participations.map(p => [p.conversation_id, p]));
+
+      const mapped: ConversationWithUser[] = convs.map(c => {
+        const part = partMap[c.id];
+        const otherParts = (allParts || []).filter(p => p.conversation_id === c.id && p.user_id !== currentUserId);
+        const otherUser = otherParts.length === 1 ? profilesMap[otherParts[0].user_id] : undefined;
+
+        return {
+          id: c.id,
+          type: c.type as Conversation['type'],
+          name: c.name || undefined,
+          avatarUrl: c.avatar_url || undefined,
+          participants: (allParts || []).filter(p => p.conversation_id === c.id).map(p => p.user_id),
+          lastMessage: lastMessagesMap[c.id],
+          unreadCount: part?.unread_count || 0,
+          isPinned: part?.is_pinned || false,
+          isMuted: part?.is_muted || false,
+          createdAt: new Date(c.created_at || Date.now()),
+          updatedAt: new Date(c.updated_at || Date.now()),
+          otherUser,
+        };
+      });
+
+      // Sort: pinned first, then by last message time
+      mapped.sort((a, b) => {
+        if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+        const aTime = a.lastMessage?.createdAt?.getTime() || a.updatedAt.getTime();
+        const bTime = b.lastMessage?.createdAt?.getTime() || b.updatedAt.getTime();
+        return bTime - aTime;
+      });
+
+      setConversations(mapped);
+      setIsLoading(false);
+    };
+
+    loadConversations();
+  }, [currentUserId]);
+
+  // Load messages for active conversation
+  useEffect(() => {
+    if (!activeId || !currentUserId) {
+      setMessages([]);
+      return;
+    }
+
+    const loadMessages = async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', activeId)
+        .order('created_at', { ascending: true });
+
+      setMessages((data || []).map(mapMessage));
+    };
+
+    loadMessages();
+
+    // Subscribe to realtime messages
+    const channel = supabase
+      .channel(`messages:${activeId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${activeId}`,
+        },
+        (payload) => {
+          const newMsg = mapMessage(payload.new);
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+          // Update last message in conversations list
+          setConversations(prev =>
+            prev.map(c =>
+              c.id === activeId ? { ...c, lastMessage: newMsg, updatedAt: newMsg.createdAt } : c
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeId, currentUserId]);
 
   const activeConversation = conversations.find(c => c.id === activeId) || null;
-  const messages = activeId ? (allMessages[activeId] || []) : [];
 
   const setActiveConversation = useCallback((id: string | null) => {
     setActiveId(id);
   }, []);
 
-  const sendMessage = useCallback((content: string) => {
-    if (!activeId || !content.trim()) return;
-    const newMsg: Message = {
-      id: `msg-${Date.now()}`,
-      conversationId: activeId,
-      senderId: '1',
-      content: content.trim(),
-      type: 'text',
-      status: 'sent',
-      createdAt: new Date(),
-    };
-    setAllMessages(prev => ({
-      ...prev,
-      [activeId]: [...(prev[activeId] || []), newMsg],
-    }));
-  }, [activeId]);
+  const sendMessage = useCallback(async (content: string) => {
+    if (!activeId || !content.trim() || !currentUserId) return;
+
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: activeId,
+        sender_id: currentUserId,
+        content: content.trim(),
+        type: 'text',
+        status: 'sent',
+      });
+
+    if (!error) {
+      // Update conversation's updated_at
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', activeId);
+    }
+  }, [activeId, currentUserId]);
+
+  const createConversation = useCallback(async (otherUserId: string): Promise<string | null> => {
+    if (!currentUserId) return null;
+
+    // Create conversation
+    const { data: conv, error: convError } = await supabase
+      .from('conversations')
+      .insert({ type: 'private' })
+      .select()
+      .single();
+
+    if (convError || !conv) return null;
+
+    // Add participants
+    const { error: partError } = await supabase
+      .from('conversation_participants')
+      .insert([
+        { conversation_id: conv.id, user_id: currentUserId },
+        { conversation_id: conv.id, user_id: otherUserId },
+      ]);
+
+    if (partError) return null;
+
+    // Reload conversations
+    setActiveId(conv.id);
+    return conv.id;
+  }, [currentUserId]);
 
   return (
-    <ChatContext.Provider value={{ conversations, activeConversation, messages, setActiveConversation, sendMessage, searchQuery, setSearchQuery }}>
+    <ChatContext.Provider value={{
+      conversations, activeConversation, messages,
+      setActiveConversation, sendMessage, searchQuery, setSearchQuery,
+      isLoading, createConversation,
+    }}>
       {children}
     </ChatContext.Provider>
   );

@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ConversationWithUser } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ConversationListProps {
   onMenuClick?: () => void;
@@ -16,6 +17,7 @@ interface ConversationListProps {
 
 export function ConversationList({ onMenuClick }: ConversationListProps) {
   const { conversations, activeConversation, setActiveConversation, searchQuery, setSearchQuery } = useChat();
+  const { user } = useAuth();
 
   const filtered = conversations.filter(c => {
     const name = c.name || c.otherUser?.displayName || '';
@@ -124,7 +126,7 @@ export function ConversationList({ onMenuClick }: ConversationListProps) {
                 </div>
                 <div className="flex items-center justify-between mt-0.5">
                   <p className="text-sm text-muted-foreground truncate pr-2">
-                    {conv.lastMessage?.senderId === '1' && (
+                    {conv.lastMessage?.senderId === user?.id && (
                       <span className="text-primary">Você: </span>
                     )}
                     {conv.lastMessage?.content || 'Nenhuma mensagem'}
