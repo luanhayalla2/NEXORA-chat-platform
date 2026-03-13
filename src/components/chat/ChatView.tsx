@@ -250,6 +250,7 @@ export function ChatView() {
             );
           })}
         </AnimatePresence>
+        {isOtherTyping && <TypingIndicator name={otherTypingName} />}
         <div ref={messagesEndRef} />
       </div>
 
