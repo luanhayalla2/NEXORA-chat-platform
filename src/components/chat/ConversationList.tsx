@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ConversationWithUser } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ConversationListProps {
   onMenuClick?: () => void;
