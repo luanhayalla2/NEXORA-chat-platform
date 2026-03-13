@@ -17,6 +17,7 @@ interface ConversationListProps {
 
 export function ConversationList({ onMenuClick }: ConversationListProps) {
   const { conversations, activeConversation, setActiveConversation, searchQuery, setSearchQuery } = useChat();
+  const { user } = useAuth();
 
   const filtered = conversations.filter(c => {
     const name = c.name || c.otherUser?.displayName || '';
