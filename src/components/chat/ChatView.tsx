@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Message } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function ChatView() {
   const { activeConversation, messages, sendMessage, setActiveConversation } = useChat();
