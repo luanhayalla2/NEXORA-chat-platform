@@ -25,10 +25,43 @@ export function ChatView() {
   const { user } = useAuth();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const [otherTypingName, setOtherTypingName] = useState('');
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Typing indicator via Supabase broadcast
+  useEffect(() => {
+    if (!activeConversation?.id || !user?.id) return;
+
+    const channel = supabase.channel(`typing:${activeConversation.id}`);
+
+    channel.on('broadcast', { event: 'typing' }, (payload) => {
+      if (payload.payload?.userId !== user.id) {
+        setIsOtherTyping(true);
+        setOtherTypingName(payload.payload?.name || '');
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => setIsOtherTyping(false), 3000);
+      }
+    }).subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, [activeConversation?.id, user?.id]);
+
+  const broadcastTyping = useCallback(() => {
+    if (!activeConversation?.id || !user) return;
+    supabase.channel(`typing:${activeConversation.id}`).send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: user.id, name: user.displayName },
+    });
+  }, [activeConversation?.id, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
