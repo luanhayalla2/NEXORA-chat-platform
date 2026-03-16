@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ConversationWithUser } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ConversationListProps {
   onMenuClick?: () => void;
@@ -16,6 +17,8 @@ interface ConversationListProps {
 
 export function ConversationList({ onMenuClick }: ConversationListProps) {
   const { conversations, activeConversation, setActiveConversation, searchQuery, setSearchQuery } = useChat();
+  const { user } = useAuth();
+  const currentUserId = user?.id;
 
   const filtered = conversations.filter(c => {
     const name = c.name || c.otherUser?.displayName || '';
