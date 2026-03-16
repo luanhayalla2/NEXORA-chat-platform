@@ -175,7 +175,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
 
     loadConversations();
-  }, [currentUserId]);
+  }, [currentUserId, convVersion]);
 
   // Fetch messages for active conversation
   useEffect(() => {
