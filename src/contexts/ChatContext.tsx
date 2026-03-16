@@ -252,12 +252,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [activeId, currentUserId]);
 
   const refreshConversations = useCallback(() => {
-    if (currentUserId) {
-      // Trigger re-fetch by toggling a dummy state
-      setIsLoading(true);
-      loadConversationsRef.current?.();
-    }
-  }, [currentUserId]);
+    setConvVersion(v => v + 1);
+  }, []);
 
   const createPrivateConversation = useCallback(async (otherUserId: string): Promise<string | null> => {
     if (!currentUserId) return null;
