@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Settings, MessageCircle, CircleDot, Users, Phone } from 'lucide-react';
+import { NewChatDialog } from '@/components/chat/NewChatDialog';
 import { AnimatePresence, motion } from 'framer-motion';
 
 type SidebarTab = 'chats' | 'status' | 'community' | 'calls';
@@ -61,9 +62,12 @@ function ChatLayout() {
             </button>
             <span className="font-semibold text-sm text-foreground">NEXORA</span>
           </div>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowSettings(true)}>
-            <Settings className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <NewChatDialog />
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowSettings(true)}>
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Tab Navigation */}

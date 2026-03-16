@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Conversation, Message, ConversationWithUser, User } from '@/types';
@@ -9,9 +9,11 @@ interface ChatContextType {
   messages: Message[];
   setActiveConversation: (id: string | null) => void;
   sendMessage: (content: string) => void;
+  createPrivateConversation: (otherUserId: string) => Promise<string | null>;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   isLoading: boolean;
+  refreshConversations: () => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [convVersion, setConvVersion] = useState(0);
 
   const currentUserId = user?.id;
 
@@ -172,7 +175,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
 
     loadConversations();
-  }, [currentUserId]);
+  }, [currentUserId, convVersion]);
 
   // Fetch messages for active conversation
   useEffect(() => {
@@ -248,8 +251,70 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [activeId, currentUserId]);
 
+  const refreshConversations = useCallback(() => {
+    setConvVersion(v => v + 1);
+  }, []);
+
+  const createPrivateConversation = useCallback(async (otherUserId: string): Promise<string | null> => {
+    if (!currentUserId) return null;
+
+    // Check if a private conversation already exists between these two users
+    const { data: myParticipations } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id')
+      .eq('user_id', currentUserId);
+
+    if (myParticipations?.length) {
+      const myConvIds = myParticipations.map(p => p.conversation_id);
+      const { data: otherParticipations } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', otherUserId)
+        .in('conversation_id', myConvIds);
+
+      if (otherParticipations?.length) {
+        // Check if any shared conversation is private
+        const sharedIds = otherParticipations.map(p => p.conversation_id);
+        const { data: sharedConvs } = await supabase
+          .from('conversations')
+          .select('id, type')
+          .in('id', sharedIds)
+          .eq('type', 'private');
+
+        if (sharedConvs?.[0]) {
+          // Already exists, just return the id
+          return sharedConvs[0].id;
+        }
+      }
+    }
+
+    // Create new conversation
+    const { data: newConv, error: convError } = await supabase
+      .from('conversations')
+      .insert({ type: 'private' })
+      .select('id')
+      .single();
+
+    if (convError || !newConv) return null;
+
+    // Add both participants
+    const { error: partError } = await supabase
+      .from('conversation_participants')
+      .insert([
+        { conversation_id: newConv.id, user_id: currentUserId },
+        { conversation_id: newConv.id, user_id: otherUserId },
+      ]);
+
+    if (partError) return null;
+
+    // Refresh conversations list
+    setTimeout(() => refreshConversations(), 100);
+
+    return newConv.id;
+  }, [currentUserId, refreshConversations]);
+
   return (
-    <ChatContext.Provider value={{ conversations, activeConversation, messages, setActiveConversation, sendMessage, searchQuery, setSearchQuery, isLoading }}>
+    <ChatContext.Provider value={{ conversations, activeConversation, messages, setActiveConversation, sendMessage, createPrivateConversation, searchQuery, setSearchQuery, isLoading, refreshConversations }}>
       {children}
     </ChatContext.Provider>
   );
