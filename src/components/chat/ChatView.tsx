@@ -19,12 +19,14 @@ import type { Message } from '@/types';
 
 export function ChatView() {
   const { activeConversation, messages, sendMessage, setActiveConversation } = useChat();
+  const { user } = useAuth();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const currentUserId = user?.id;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
