@@ -127,7 +127,7 @@ export function ConversationList({ onMenuClick }: ConversationListProps) {
                 </div>
                 <div className="flex items-center justify-between mt-0.5">
                   <p className="text-sm text-muted-foreground truncate pr-2">
-                    {conv.lastMessage?.senderId === '1' && (
+                    {conv.lastMessage?.senderId === currentUserId && (
                       <span className="text-primary">Você: </span>
                     )}
                     {conv.lastMessage?.content || 'Nenhuma mensagem'}

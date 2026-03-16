@@ -178,7 +178,7 @@ export function ChatView() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
-            const isOwn = msg.senderId === '1';
+            const isOwn = msg.senderId === currentUserId;
             const showTime = i === 0 || 
               (messages[i - 1].createdAt.getTime() - msg.createdAt.getTime() > 300000);
             
