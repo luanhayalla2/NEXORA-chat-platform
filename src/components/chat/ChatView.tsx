@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { EmojiPicker } from './EmojiPicker';
 import { ChatHeaderMenu } from './ChatHeaderMenu';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,12 +20,14 @@ import type { Message } from '@/types';
 
 export function ChatView() {
   const { activeConversation, messages, sendMessage, setActiveConversation } = useChat();
+  const { user } = useAuth();
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const currentUserId = user?.id;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -175,7 +178,7 @@ export function ChatView() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
-            const isOwn = msg.senderId === '1';
+            const isOwn = msg.senderId === currentUserId;
             const showTime = i === 0 || 
               (messages[i - 1].createdAt.getTime() - msg.createdAt.getTime() > 300000);
             
