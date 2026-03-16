@@ -9,9 +9,11 @@ interface ChatContextType {
   messages: Message[];
   setActiveConversation: (id: string | null) => void;
   sendMessage: (content: string) => void;
+  createPrivateConversation: (otherUserId: string) => Promise<string | null>;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   isLoading: boolean;
+  refreshConversations: () => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
