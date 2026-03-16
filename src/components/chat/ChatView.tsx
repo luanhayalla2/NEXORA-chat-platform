@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { EmojiPicker } from './EmojiPicker';
 import { ChatHeaderMenu } from './ChatHeaderMenu';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
