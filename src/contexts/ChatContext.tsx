@@ -39,6 +39,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [convVersion, setConvVersion] = useState(0);
 
   const currentUserId = user?.id;
 
