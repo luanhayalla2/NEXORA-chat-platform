@@ -70,31 +70,6 @@ function ChatLayout() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-border bg-card">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors relative',
-                activeTab === tab.id
-                  ? 'text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <tab.icon className="h-5 w-5" />
-              <span>{tab.label}</span>
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute bottom-0 left-2 right-2 h-[2px] bg-primary rounded-full"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-
         {/* Content */}
         <div className="relative flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
@@ -112,6 +87,31 @@ function ChatLayout() {
           <AnimatePresence>
             {showSettings && <AppSettingsPanel onClose={() => setShowSettings(false)} />}
           </AnimatePresence>
+        </div>
+
+        {/* Tab Navigation - Bottom */}
+        <div className="flex border-t border-border bg-card">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition-colors relative',
+                activeTab === tab.id
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <tab.icon className="h-5 w-5" />
+              <span>{tab.label}</span>
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute top-0 left-2 right-2 h-[2px] bg-primary rounded-full"
+                />
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
