@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { WalletPanel } from './WalletPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   X, Moon, Sun, Bell, BellOff, Shield, Lock, Globe, Palette,
   User, LogOut, ChevronRight, ChevronLeft, Save, Languages,
-  MessageSquare, HardDrive, Trash2, Info
+  MessageSquare, HardDrive, Trash2, Info, Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -18,7 +19,7 @@ interface AppSettingsPanelProps {
   onClose: () => void;
 }
 
-type SettingsPage = 'main' | 'account' | 'notifications' | 'privacy' | 'appearance' | 'storage' | 'language' | 'about';
+type SettingsPage = 'main' | 'account' | 'notifications' | 'privacy' | 'appearance' | 'storage' | 'language' | 'about' | 'wallet';
 
 export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
   const { user, logout, updateProfile } = useAuth();
@@ -75,6 +76,7 @@ export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
 
   const menuItems: { id: SettingsPage; icon: React.ElementType; label: string; desc: string }[] = [
     { id: 'account', icon: User, label: 'Conta', desc: 'Editar perfil, nome, bio' },
+    { id: 'wallet', icon: Wallet, label: 'Carteira', desc: 'Envie e receba criptomoedas' },
     { id: 'notifications', icon: Bell, label: 'Notificações', desc: 'Sons, vibração, preview' },
     { id: 'privacy', icon: Shield, label: 'Privacidade', desc: 'Visto por último, confirmação de leitura' },
     { id: 'appearance', icon: Palette, label: 'Aparência', desc: 'Tema claro/escuro' },
@@ -294,6 +296,10 @@ export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
           </Button>
         </div>
       )}
+      {/* Wallet overlay */}
+      <AnimatePresence>
+        {page === 'wallet' && <WalletPanel onClose={() => setPage('main')} />}
+      </AnimatePresence>
     </motion.div>
   );
 }
