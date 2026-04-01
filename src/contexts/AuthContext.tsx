@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { sanitizeUserInput, isValidEmail, validatePassword } from '@/lib/sanitize';
+import { logSecurityEvent, checkRateLimit } from '@/lib/securityLogger';
 import type { User, AuthState, LoginCredentials, SignupCredentials } from '@/types';
 import type { Session } from '@supabase/supabase-js';
 
