@@ -80,6 +80,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
+    if (!checkRateLimit('login', 5, 60000)) {
+      throw new Error('Muitas tentativas de login. Tente novamente em 1 minuto.');
+    }
+
+    if (!isValidEmail(credentials.email)) {
+      logSecurityEvent('LOGIN_FAILED', undefined, { reason: 'invalid_email' });
+      throw new Error('Email inválido');
+    }
+
     setState(prev => ({ ...prev, isLoading: true }));
     const { error } = await supabase.auth.signInWithPassword({
       email: credentials.email,
@@ -87,8 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) {
       setState(prev => ({ ...prev, isLoading: false }));
+      logSecurityEvent('LOGIN_FAILED', undefined, { reason: error.message });
       throw new Error(error.message);
     }
+    logSecurityEvent('LOGIN_SUCCESS', undefined, { email: credentials.email });
   }, []);
 
   const signup = useCallback(async (credentials: SignupCredentials) => {
