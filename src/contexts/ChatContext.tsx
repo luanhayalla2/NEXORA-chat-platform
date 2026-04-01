@@ -240,16 +240,28 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const sendMessage = useCallback(async (content: string) => {
     if (!activeId || !content.trim() || !currentUserId) return;
 
+    // Sanitize message content to prevent XSS/injection
+    const sanitized = sanitizeMessage(content);
+    if (!sanitized) {
+      logSecurityEvent('MESSAGE_SANITIZED', currentUserId, { reason: 'empty_after_sanitize' });
+      return;
+    }
+
+    if (sanitized !== content.trim()) {
+      logSecurityEvent('MESSAGE_SANITIZED', currentUserId, { reason: 'content_modified' });
+    }
+
     const { error } = await supabase.from('messages').insert({
       conversation_id: activeId,
       sender_id: currentUserId,
-      content: content.trim(),
+      content: sanitized,
       type: 'text',
       status: 'sent',
     });
 
     if (error) {
       console.error('Failed to send message:', error);
+      logSecurityEvent('INVALID_INPUT', currentUserId, { error: error.message, action: 'send_message' });
     }
   }, [activeId, currentUserId]);
 
