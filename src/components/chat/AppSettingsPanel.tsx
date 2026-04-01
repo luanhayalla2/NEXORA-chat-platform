@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   X, Moon, Sun, Bell, BellOff, Shield, Lock, Globe, Palette,
   User, LogOut, ChevronRight, ChevronLeft, Save, Languages,
-  MessageSquare, HardDrive, Trash2, Info
+  MessageSquare, HardDrive, Trash2, Info, Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
