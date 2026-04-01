@@ -296,6 +296,10 @@ export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
           </Button>
         </div>
       )}
+      {/* Wallet overlay */}
+      <AnimatePresence>
+        {page === 'wallet' && <WalletPanel onClose={() => setPage('main')} />}
+      </AnimatePresence>
     </motion.div>
   );
 }
