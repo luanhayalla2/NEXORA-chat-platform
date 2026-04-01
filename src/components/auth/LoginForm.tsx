@@ -26,8 +26,17 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     }
     try {
       await login({ email, password });
-    } catch {
-      setError('Credenciais inválidas');
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.includes('Invalid login')) {
+        setError('Email ou senha incorretos');
+      } else if (msg.includes('Muitas tentativas')) {
+        setError(msg);
+      } else if (msg.includes('Email not confirmed')) {
+        setError('Confirme seu email antes de entrar');
+      } else {
+        setError('Erro ao fazer login. Tente novamente.');
+      }
     }
   };
 

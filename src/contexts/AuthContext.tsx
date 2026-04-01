@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { sanitizeUserInput, isValidEmail, validatePassword } from '@/lib/sanitize';
+import { logSecurityEvent, checkRateLimit } from '@/lib/securityLogger';
 import type { User, AuthState, LoginCredentials, SignupCredentials } from '@/types';
 import type { Session } from '@supabase/supabase-js';
 
@@ -78,6 +80,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
+    if (!checkRateLimit('login', 5, 60000)) {
+      throw new Error('Muitas tentativas de login. Tente novamente em 1 minuto.');
+    }
+
+    if (!isValidEmail(credentials.email)) {
+      logSecurityEvent('LOGIN_FAILED', undefined, { reason: 'invalid_email' });
+      throw new Error('Email inválido');
+    }
+
     setState(prev => ({ ...prev, isLoading: true }));
     const { error } = await supabase.auth.signInWithPassword({
       email: credentials.email,
@@ -85,44 +96,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) {
       setState(prev => ({ ...prev, isLoading: false }));
+      logSecurityEvent('LOGIN_FAILED', undefined, { reason: error.message });
       throw new Error(error.message);
     }
+    logSecurityEvent('LOGIN_SUCCESS', undefined, { email: credentials.email });
   }, []);
 
   const signup = useCallback(async (credentials: SignupCredentials) => {
+    if (!isValidEmail(credentials.email)) {
+      throw new Error('Email inválido');
+    }
+
+    const passwordCheck = validatePassword(credentials.password);
+    if (!passwordCheck.valid) {
+      throw new Error(passwordCheck.message);
+    }
+
+    const sanitizedUsername = sanitizeUserInput(credentials.username, 50);
+    const sanitizedDisplayName = sanitizeUserInput(credentials.displayName, 100);
+
+    if (!sanitizedUsername || !sanitizedDisplayName) {
+      throw new Error('Nome de usuário e nome de exibição são obrigatórios');
+    }
+
     setState(prev => ({ ...prev, isLoading: true }));
     const { error } = await supabase.auth.signUp({
       email: credentials.email,
       password: credentials.password,
       options: {
         data: {
-          username: credentials.username,
-          display_name: credentials.displayName,
+          username: sanitizedUsername,
+          display_name: sanitizedDisplayName,
         },
         emailRedirectTo: window.location.origin,
       },
     });
     if (error) {
       setState(prev => ({ ...prev, isLoading: false }));
+      logSecurityEvent('SIGNUP_FAILED', undefined, { reason: error.message });
       throw new Error(error.message);
     }
+    logSecurityEvent('SIGNUP_SUCCESS', undefined, { email: credentials.email });
   }, []);
 
   const logout = useCallback(async () => {
+    const userId = state.user?.id;
     await supabase.auth.signOut();
     setState({ user: null, isAuthenticated: false, isLoading: false });
-  }, []);
+    logSecurityEvent('LOGOUT', userId);
+  }, [state.user?.id]);
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
     const userId = state.user?.id;
     if (!userId) return;
 
     const updates: Record<string, unknown> = {};
-    if (data.displayName !== undefined) updates.display_name = data.displayName;
-    if (data.username !== undefined) updates.username = data.username;
+    if (data.displayName !== undefined) updates.display_name = sanitizeUserInput(data.displayName, 100);
+    if (data.username !== undefined) updates.username = sanitizeUserInput(data.username, 50);
     if (data.avatarUrl !== undefined) updates.avatar_url = data.avatarUrl;
-    if (data.bio !== undefined) updates.bio = data.bio;
-    if (data.phone !== undefined) updates.phone = data.phone;
+    if (data.bio !== undefined) updates.bio = sanitizeUserInput(data.bio || '', 500);
+    if (data.phone !== undefined) updates.phone = sanitizeUserInput(data.phone || '', 20);
 
     const { error } = await supabase
       .from('profiles')
@@ -134,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...prev,
         user: prev.user ? { ...prev.user, ...data } : null,
       }));
+      logSecurityEvent('PROFILE_UPDATED', userId, { fields: Object.keys(updates) });
     }
   }, [state.user?.id]);
 
