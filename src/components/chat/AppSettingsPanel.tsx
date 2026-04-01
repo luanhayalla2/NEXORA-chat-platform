@@ -18,7 +18,7 @@ interface AppSettingsPanelProps {
   onClose: () => void;
 }
 
-type SettingsPage = 'main' | 'account' | 'notifications' | 'privacy' | 'appearance' | 'storage' | 'language' | 'about';
+type SettingsPage = 'main' | 'account' | 'notifications' | 'privacy' | 'appearance' | 'storage' | 'language' | 'about' | 'wallet';
 
 export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
   const { user, logout, updateProfile } = useAuth();
