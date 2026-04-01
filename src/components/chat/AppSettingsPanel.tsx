@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { WalletPanel } from './WalletPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
