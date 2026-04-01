@@ -103,22 +103,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signup = useCallback(async (credentials: SignupCredentials) => {
+    if (!isValidEmail(credentials.email)) {
+      throw new Error('Email inválido');
+    }
+
+    const passwordCheck = validatePassword(credentials.password);
+    if (!passwordCheck.valid) {
+      throw new Error(passwordCheck.message);
+    }
+
+    const sanitizedUsername = sanitizeUserInput(credentials.username, 50);
+    const sanitizedDisplayName = sanitizeUserInput(credentials.displayName, 100);
+
+    if (!sanitizedUsername || !sanitizedDisplayName) {
+      throw new Error('Nome de usuário e nome de exibição são obrigatórios');
+    }
+
     setState(prev => ({ ...prev, isLoading: true }));
     const { error } = await supabase.auth.signUp({
       email: credentials.email,
       password: credentials.password,
       options: {
         data: {
-          username: credentials.username,
-          display_name: credentials.displayName,
+          username: sanitizedUsername,
+          display_name: sanitizedDisplayName,
         },
         emailRedirectTo: window.location.origin,
       },
     });
     if (error) {
       setState(prev => ({ ...prev, isLoading: false }));
+      logSecurityEvent('SIGNUP_FAILED', undefined, { reason: error.message });
       throw new Error(error.message);
     }
+    logSecurityEvent('SIGNUP_SUCCESS', undefined, { email: credentials.email });
   }, []);
 
   const logout = useCallback(async () => {
