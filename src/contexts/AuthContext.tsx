@@ -140,9 +140,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    const userId = state.user?.id;
     await supabase.auth.signOut();
     setState({ user: null, isAuthenticated: false, isLoading: false });
-  }, []);
+    logSecurityEvent('LOGOUT', userId);
+  }, [state.user?.id]);
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
     const userId = state.user?.id;
