@@ -151,11 +151,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!userId) return;
 
     const updates: Record<string, unknown> = {};
-    if (data.displayName !== undefined) updates.display_name = data.displayName;
-    if (data.username !== undefined) updates.username = data.username;
+    if (data.displayName !== undefined) updates.display_name = sanitizeUserInput(data.displayName, 100);
+    if (data.username !== undefined) updates.username = sanitizeUserInput(data.username, 50);
     if (data.avatarUrl !== undefined) updates.avatar_url = data.avatarUrl;
-    if (data.bio !== undefined) updates.bio = data.bio;
-    if (data.phone !== undefined) updates.phone = data.phone;
+    if (data.bio !== undefined) updates.bio = sanitizeUserInput(data.bio || '', 500);
+    if (data.phone !== undefined) updates.phone = sanitizeUserInput(data.phone || '', 20);
 
     const { error } = await supabase
       .from('profiles')
@@ -167,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...prev,
         user: prev.user ? { ...prev.user, ...data } : null,
       }));
+      logSecurityEvent('PROFILE_UPDATED', userId, { fields: Object.keys(updates) });
     }
   }, [state.user?.id]);
 
