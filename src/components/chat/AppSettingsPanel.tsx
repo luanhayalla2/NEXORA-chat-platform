@@ -79,6 +79,8 @@ export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
   const menuItems: { id: SettingsPage; icon: React.ElementType; label: string; desc: string }[] = [
     { id: 'account', icon: User, label: 'Conta', desc: 'Editar perfil, nome, bio' },
     { id: 'wallet', icon: Wallet, label: 'Carteira', desc: 'Envie e receba criptomoedas' },
+    { id: '2fa', icon: KeyRound, label: 'Autenticação 2FA', desc: 'Google Authenticator / TOTP' },
+    { id: 'security-logs', icon: FileText, label: 'Logs de Segurança', desc: 'Histórico de eventos de segurança' },
     { id: 'notifications', icon: Bell, label: 'Notificações', desc: 'Sons, vibração, preview' },
     { id: 'privacy', icon: Shield, label: 'Privacidade', desc: 'Visto por último, confirmação de leitura' },
     { id: 'appearance', icon: Palette, label: 'Aparência', desc: 'Tema claro/escuro' },
