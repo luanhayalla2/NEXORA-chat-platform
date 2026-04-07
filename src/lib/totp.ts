@@ -19,15 +19,16 @@ export async function generateTOTP(secret: string, timeStep = 30): Promise<strin
     t = Math.floor(t / 256);
   }
 
+  const keyData = base32Decode(secret);
   const key = await crypto.subtle.importKey(
     'raw',
-    base32Decode(secret),
+    keyData.buffer as ArrayBuffer,
     { name: 'HMAC', hash: 'SHA-1' },
     false,
     ['sign']
   );
 
-  const signature = await crypto.subtle.sign('HMAC', key, timeBytes);
+  const signature = await crypto.subtle.sign('HMAC', key, timeBytes.buffer as ArrayBuffer);
   const hash = new Uint8Array(signature);
 
   // Dynamic truncation
