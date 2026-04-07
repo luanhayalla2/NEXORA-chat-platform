@@ -53,15 +53,16 @@ export async function verifyTOTP(secret: string, code: string, timeStep = 30): P
       t = Math.floor(t / 256);
     }
 
+    const keyData = base32Decode(secret);
     const key = await crypto.subtle.importKey(
       'raw',
-      base32Decode(secret),
+      keyData.buffer as ArrayBuffer,
       { name: 'HMAC', hash: 'SHA-1' },
       false,
       ['sign']
     );
 
-    const signature = await crypto.subtle.sign('HMAC', key, timeBytes);
+    const signature = await crypto.subtle.sign('HMAC', key, timeBytes.buffer as ArrayBuffer);
     const hash = new Uint8Array(signature);
     const off = hash[hash.length - 1] & 0x0f;
     const c =
