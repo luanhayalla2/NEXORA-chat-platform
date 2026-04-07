@@ -222,6 +222,12 @@ export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
           </div>
         );
 
+      case '2fa':
+        return <TwoFactorSetup onClose={() => setPage('main')} />;
+
+      case 'security-logs':
+        return <SecurityLogsPanel onClose={() => setPage('main')} />;
+
       default:
         return null;
     }
