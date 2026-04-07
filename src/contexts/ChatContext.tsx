@@ -252,10 +252,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       logSecurityEvent('MESSAGE_SANITIZED', currentUserId, { reason: 'content_modified' });
     }
 
+    // Encrypt message with E2E encryption
+    let finalContent = sanitized;
+    try {
+      const key = await getOrCreateConversationKey(activeId);
+      finalContent = await encryptMessage(sanitized, key);
+    } catch (err) {
+      console.warn('E2E encryption failed, sending plain text:', err);
+    }
+
     const { error } = await supabase.from('messages').insert({
       conversation_id: activeId,
       sender_id: currentUserId,
-      content: sanitized,
+      content: finalContent,
       type: 'text',
       status: 'sent',
     });
