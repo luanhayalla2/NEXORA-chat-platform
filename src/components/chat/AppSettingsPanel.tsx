@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { WalletPanel } from './WalletPanel';
+import { TwoFactorSetup } from './TwoFactorSetup';
+import { SecurityLogsPanel } from './SecurityLogsPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -10,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   X, Moon, Sun, Bell, BellOff, Shield, Lock, Globe, Palette,
   User, LogOut, ChevronRight, ChevronLeft, Save, Languages,
-  MessageSquare, HardDrive, Trash2, Info, Wallet
+  MessageSquare, HardDrive, Trash2, Info, Wallet, KeyRound, FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -19,7 +21,7 @@ interface AppSettingsPanelProps {
   onClose: () => void;
 }
 
-type SettingsPage = 'main' | 'account' | 'notifications' | 'privacy' | 'appearance' | 'storage' | 'language' | 'about' | 'wallet';
+type SettingsPage = 'main' | 'account' | 'notifications' | 'privacy' | 'appearance' | 'storage' | 'language' | 'about' | 'wallet' | '2fa' | 'security-logs';
 
 export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
   const { user, logout, updateProfile } = useAuth();
@@ -77,6 +79,8 @@ export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
   const menuItems: { id: SettingsPage; icon: React.ElementType; label: string; desc: string }[] = [
     { id: 'account', icon: User, label: 'Conta', desc: 'Editar perfil, nome, bio' },
     { id: 'wallet', icon: Wallet, label: 'Carteira', desc: 'Envie e receba criptomoedas' },
+    { id: '2fa', icon: KeyRound, label: 'Autenticação 2FA', desc: 'Google Authenticator / TOTP' },
+    { id: 'security-logs', icon: FileText, label: 'Logs de Segurança', desc: 'Histórico de eventos de segurança' },
     { id: 'notifications', icon: Bell, label: 'Notificações', desc: 'Sons, vibração, preview' },
     { id: 'privacy', icon: Shield, label: 'Privacidade', desc: 'Visto por último, confirmação de leitura' },
     { id: 'appearance', icon: Palette, label: 'Aparência', desc: 'Tema claro/escuro' },
@@ -217,6 +221,12 @@ export function AppSettingsPanel({ onClose }: AppSettingsPanelProps) {
             <p className="text-xs text-muted-foreground">© 2026 NEXORA. Todos os direitos reservados.</p>
           </div>
         );
+
+      case '2fa':
+        return <TwoFactorSetup onClose={() => setPage('main')} />;
+
+      case 'security-logs':
+        return <SecurityLogsPanel onClose={() => setPage('main')} />;
 
       default:
         return null;

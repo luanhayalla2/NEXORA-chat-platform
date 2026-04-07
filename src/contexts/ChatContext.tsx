@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { sanitizeMessage } from '@/lib/sanitize';
 import { logSecurityEvent } from '@/lib/securityLogger';
+import { encryptMessage, decryptMessage, getOrCreateConversationKey, isEncrypted } from '@/lib/e2eCrypto';
 import type { Conversation, Message, ConversationWithUser, User } from '@/types';
 
 interface ChatContextType {
@@ -194,7 +195,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         .order('created_at', { ascending: true });
 
       if (data) {
-        setMessages(data.map(mapMessage));
+        // Decrypt messages
+        const mapped = data.map(mapMessage);
+        try {
+          const key = await getOrCreateConversationKey(activeId!);
+          const decrypted = await Promise.all(
+            mapped.map(async (msg) => {
+              if (isEncrypted(msg.content)) {
+                try {
+                  const plain = await decryptMessage(msg.content, key);
+                  return { ...msg, content: plain };
+                } catch {
+                  return { ...msg, content: '🔒 Mensagem criptografada' };
+                }
+              }
+              return msg;
+            })
+          );
+          setMessages(decrypted);
+        } catch {
+          setMessages(mapped);
+        }
       }
     }
 
@@ -211,16 +232,25 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           table: 'messages',
           filter: `conversation_id=eq.${activeId}`,
         },
-        (payload) => {
+        async (payload) => {
           const newMsg = mapMessage(payload.new);
+          // Decrypt if encrypted
+          let displayMsg = newMsg;
+          if (isEncrypted(newMsg.content)) {
+            try {
+              const key = await getOrCreateConversationKey(activeId!);
+              const plain = await decryptMessage(newMsg.content, key);
+              displayMsg = { ...newMsg, content: plain };
+            } catch {
+              displayMsg = { ...newMsg, content: '🔒 Mensagem criptografada' };
+            }
+          }
           setMessages(prev => {
-            // Avoid duplicates
-            if (prev.some(m => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
+            if (prev.some(m => m.id === displayMsg.id)) return prev;
+            return [...prev, displayMsg];
           });
-          // Update last message in conversations list
           setConversations(prev => prev.map(c => 
-            c.id === activeId ? { ...c, lastMessage: newMsg } : c
+            c.id === activeId ? { ...c, lastMessage: displayMsg } : c
           ));
         }
       )
@@ -251,10 +281,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       logSecurityEvent('MESSAGE_SANITIZED', currentUserId, { reason: 'content_modified' });
     }
 
+    // Encrypt message with E2E encryption
+    let finalContent = sanitized;
+    try {
+      const key = await getOrCreateConversationKey(activeId);
+      finalContent = await encryptMessage(sanitized, key);
+    } catch (err) {
+      console.warn('E2E encryption failed, sending plain text:', err);
+    }
+
     const { error } = await supabase.from('messages').insert({
       conversation_id: activeId,
       sender_id: currentUserId,
-      content: sanitized,
+      content: finalContent,
       type: 'text',
       status: 'sent',
     });
