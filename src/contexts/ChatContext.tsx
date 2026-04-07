@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { sanitizeMessage } from '@/lib/sanitize';
 import { logSecurityEvent } from '@/lib/securityLogger';
+import { encryptMessage, decryptMessage, getOrCreateConversationKey, isEncrypted } from '@/lib/e2eCrypto';
 import type { Conversation, Message, ConversationWithUser, User } from '@/types';
 
 interface ChatContextType {
