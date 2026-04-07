@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { WalletPanel } from './WalletPanel';
+import { TwoFactorSetup } from './TwoFactorSetup';
+import { SecurityLogsPanel } from './SecurityLogsPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -10,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   X, Moon, Sun, Bell, BellOff, Shield, Lock, Globe, Palette,
   User, LogOut, ChevronRight, ChevronLeft, Save, Languages,
-  MessageSquare, HardDrive, Trash2, Info, Wallet
+  MessageSquare, HardDrive, Trash2, Info, Wallet, KeyRound, FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';

@@ -232,16 +232,25 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           table: 'messages',
           filter: `conversation_id=eq.${activeId}`,
         },
-        (payload) => {
+        async (payload) => {
           const newMsg = mapMessage(payload.new);
+          // Decrypt if encrypted
+          let displayMsg = newMsg;
+          if (isEncrypted(newMsg.content)) {
+            try {
+              const key = await getOrCreateConversationKey(activeId!);
+              const plain = await decryptMessage(newMsg.content, key);
+              displayMsg = { ...newMsg, content: plain };
+            } catch {
+              displayMsg = { ...newMsg, content: '🔒 Mensagem criptografada' };
+            }
+          }
           setMessages(prev => {
-            // Avoid duplicates
-            if (prev.some(m => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
+            if (prev.some(m => m.id === displayMsg.id)) return prev;
+            return [...prev, displayMsg];
           });
-          // Update last message in conversations list
           setConversations(prev => prev.map(c => 
-            c.id === activeId ? { ...c, lastMessage: newMsg } : c
+            c.id === activeId ? { ...c, lastMessage: displayMsg } : c
           ));
         }
       )
