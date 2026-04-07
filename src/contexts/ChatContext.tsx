@@ -195,7 +195,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         .order('created_at', { ascending: true });
 
       if (data) {
-        setMessages(data.map(mapMessage));
+        // Decrypt messages
+        const mapped = data.map(mapMessage);
+        try {
+          const key = await getOrCreateConversationKey(activeId!);
+          const decrypted = await Promise.all(
+            mapped.map(async (msg) => {
+              if (isEncrypted(msg.content)) {
+                try {
+                  const plain = await decryptMessage(msg.content, key);
+                  return { ...msg, content: plain };
+                } catch {
+                  return { ...msg, content: '🔒 Mensagem criptografada' };
+                }
+              }
+              return msg;
+            })
+          );
+          setMessages(decrypted);
+        } catch {
+          setMessages(mapped);
+        }
       }
     }
 
